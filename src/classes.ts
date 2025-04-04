@@ -31,7 +31,3 @@ export class Config {
         this.appName = appName;
     }
 }
-
-export class NekowebApiWithKey {
-    
-}
