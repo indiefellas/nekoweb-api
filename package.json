@@ -1,5 +1,5 @@
 {
-  "name": "@indiefellas/nekoweb-api",
+  "name": "@indiefellas/nekoapi",
   "module": "./src/index.ts",
   "type": "module",
   "devDependencies": {

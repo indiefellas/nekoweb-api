@@ -2,7 +2,7 @@ import { Config } from './classes';
 
 const BASE_URL = "https://nekoweb.org/api";
 
-export class NekowebAPI {
+export class NekoAPI {
 	config: Config;
 	constructor(config: Config) {
 		this.config = config;
