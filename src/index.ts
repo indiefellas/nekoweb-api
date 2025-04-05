@@ -2,8 +2,7 @@ import type { Config, Site } from './types';
 
 const BASE_URL = "https://nekoweb.org/api";
 
-// TODO: impl files and the rest of the api
-export class NekowebAPI {
+export default class NekowebAPI {
 	private config: Config;
 	constructor(config: Config) {
 		this.config = config;

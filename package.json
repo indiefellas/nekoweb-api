@@ -4,9 +4,15 @@
   "module": "./src/index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  }
 }
