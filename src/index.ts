@@ -1,6 +1,6 @@
 import type { ZodSchema } from 'zod';
-import { siteSchema, type Site } from './objects';
-import { type Config } from './types';
+import { siteSchema, type Site } from './objects.js';
+import { type Config } from './types.js';
 
 const BASE_URL = "https://nekoweb.org/api";
 
