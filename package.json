@@ -1,5 +1,6 @@
 {
-  "name": "@indiefellas/nekoapi",
+  "name": "@indiefellas/nekoweb-api",
+  "description": "The definitive Nekoweb API wrapper.",
   "module": "./src/index.ts",
   "type": "module",
   "devDependencies": {
