@@ -1,4 +1,6 @@
-import type { Config, Site } from './types';
+import type { ZodSchema } from 'zod';
+import { siteSchema } from './objects';
+import { Site, type Config } from './types';
 
 const BASE_URL = "https://nekoweb.org/api";
 
@@ -8,7 +10,7 @@ export default class NekowebAPI {
 		this.config = config;
 	}
 
-	async generic<T>(route: String): Promise<T> {
+	async generic<T>(route: String, schema: ZodSchema<T>): Promise<T> {
 		try {
 			const response = await fetch(new URL(BASE_URL + route).href, {
 				method: "GET",
@@ -20,12 +22,8 @@ export default class NekowebAPI {
 			if (!response.ok) {
 				throw new Error(`Generic request failed with the code ${response.status}`);
 			}
-			let res = await response.json() as T;
-			let site: T = {
-				...res
-			}
-			return site;
-			// NOTE: custom jank type manipulation lawl
+			let res = await response.json();
+			return schema.parse(res);
 		} catch (error) {
 			throw new Error(`Failed to do generic request to ${BASE_URL + route}: ${error}`);
 		}
@@ -34,9 +32,9 @@ export default class NekowebAPI {
 	async getSiteInfo(username: String = "") {
 		if (!username) {
 			if (!this.config.apiKey) throw new Error("Failed to retrieve site info, missing api key");
-			return this.generic<Site>("/site/info")
+			return this.generic<Site>("/site/info", siteSchema)
 		} else {
-			return this.generic<Site>(`/site/info/${username}`)
+			return this.generic<Site>(`/site/info/${username}`, siteSchema)
 		}
 	}
 }

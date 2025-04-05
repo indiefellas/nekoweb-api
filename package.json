@@ -4,7 +4,8 @@
   "module": "./src/index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "zod": "^3.24.2"
   },
   "peerDependencies": {
     "typescript": "^5"
