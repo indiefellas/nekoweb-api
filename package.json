@@ -18,12 +18,16 @@
     "typescript": "^5"
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "src/**/*"
   ],
   "exports": {
     ".": "./dist/index.js",
     "./types": "./dist/types.js",
-    "./objects": "./dist/objects.js"
+    "./objects": "./dist/objects.js",
+    "./ts/.": "./src/index.ts",
+    "./ts/types": "./src/types.ts",
+    "./ts/objects": "./src/objects.ts"
   },
   "keywords": [
     "nekoweb",
