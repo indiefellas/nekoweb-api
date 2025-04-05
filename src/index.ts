@@ -1,5 +1,4 @@
-import type { ZodSchema } from 'zod';
-import { folderSchema, foldersSchema, siteSchema, type Folder, type Site } from './objects.js';
+import { Folder, Site, type IFolder, type ISite } from './classes.js';
 import { type Config } from './types.js';
 
 const BASE_URL = "https://nekoweb.org/api";
@@ -10,7 +9,7 @@ export default class NekowebAPI {
 		this.config = config;
 	}
 
-	async generic<T>(route: String, schema: ZodSchema<T>): Promise<T> {
+	async generic<T>(route: String): Promise<T> {
 		try {
 			const response = await fetch(new URL(BASE_URL + route).href, {
 				method: "GET",
@@ -22,8 +21,7 @@ export default class NekowebAPI {
 			if (!response.ok) {
 				throw new Error(`Generic request failed with the code ${response.status}`);
 			}
-			let res = await response.json();
-			return schema.parse(res);
+			return response.json() as T;
 		} catch (error) {
 			throw new Error(`Failed to do generic request to ${BASE_URL + route}: ${error}`);
 		}
@@ -32,13 +30,13 @@ export default class NekowebAPI {
 	async getSiteInfo(username: String = ""): Promise<Site> {
 		if (!username) {
 			if (!this.config.apiKey) throw new Error("Failed to retrieve site info, missing api key");
-			return this.generic<Site>("/site/info", siteSchema)
+			return await this.generic<ISite>("/site/info")
 		} else {
-			return this.generic<Site>(`/site/info/${username}`, siteSchema)
+			return await this.generic<ISite>(`/site/info/${username}`)
 		}
 	}
 
 	async getDir(path: string = "/"): Promise<Folder[]> {
-		return this.generic<Folder[]>(`/files/readfolder?pathname=${encodeURIComponent(path)}`, foldersSchema)
+		return await this.generic<IFolder[]>(`/files/readfolder?pathname=${encodeURIComponent(path)}`)
 	}
 }
