@@ -139,9 +139,6 @@ export default class NekowebAPI {
 		data.append("pathname", path);
 		data.append("content", content);
 
-
-		console.log(data.getBuffer().toString())
-
 		return this.generic('/files/edit', {
 			method: 'POST',
 			body: data
