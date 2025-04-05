@@ -37,3 +37,27 @@ export interface IBigId {
 export class BigId implements IBigId {
   id!: string;
 }
+
+export interface ILimits {
+  general: ILimit,
+  big_uploads: ILimit,
+  zip: ILimit
+}
+
+export class Limits implements ILimits {
+  general!: Limit;
+  big_uploads!: Limit;
+  zip!: Limit;
+}
+
+export interface ILimit {
+  limit: number,
+  remaining: number,
+  reset: number
+}
+
+export class Limit implements ILimit {
+  limit!: number;
+  remaining!: number;
+  reset!: number;
+}

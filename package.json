@@ -28,5 +28,8 @@
   ],
   "scripts": {
     "compile": "tsc"
+  },
+  "dependencies": {
+    "form-data": "^4.0.2"
   }
 }
