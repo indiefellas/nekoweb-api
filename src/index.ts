@@ -1,3 +1,4 @@
+import type { HeadersInit } from 'bun';
 import { Folder, Site, type IFolder, type ISite } from './classes.js';
 import { type Config } from './types.js';
 
@@ -9,14 +10,22 @@ export default class NekowebAPI {
 		this.config = config;
 	}
 
-	async generic<T>(route: String): Promise<T> {
+	private async generic<T>(route: String): Promise<T> {
 		try {
+			const headers: HeadersInit = { 
+				Authorization: this.config.apiKey ?? "",
+				"User-Agent": `${this.config.appName || "NekowebAPI"}/1.0`
+			}
+			if (this.config.cookie) {
+				headers.Cookie = `token=${this.config.cookie}`;
+				headers.Referer = `https://nekoweb.org/?${encodeURIComponent(
+					`${this.config.appName || "NekowebAPI"} using @indiefellas/nekoweb-api`
+				)}`;
+			}
+
 			const response = await fetch(new URL(BASE_URL + route).href, {
 				method: "GET",
-				headers: { 
-					"Authorization": this.config.apiKey ?? "",
-					"User-Agent": `${this.config.appName || "NekowebAPI"}/1.0`
-				}
+				headers: headers
 			});
 			if (!response.ok) {
 				throw new Error(`Generic request failed with the code ${response.status}`);

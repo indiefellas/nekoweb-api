@@ -1,4 +1,3 @@
-//NOTE: yay jsdoc
 export type Config = {
     /** Your Nekoweb API key. */
     apiKey: string;
