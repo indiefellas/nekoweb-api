@@ -19,7 +19,7 @@ export type BigId = {
 }
 
 export type Config = {
-    apiKey: string | undefined;
+    apiKey: string;
     cookie: string | undefined;
     appName: string | undefined;
 }
