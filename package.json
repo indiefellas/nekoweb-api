@@ -1,16 +1,13 @@
 {
   "name": "@indiefellas/nekoweb-api",
   "description": "The definitive Nekoweb API wrapper",
-  "version": "0.1.2-beta.4",
+  "version": "0.1.2-beta.6",
   "repository": {
     "url": "https://github.com/indiefellas/nekoweb-api"
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
-  "dependencies": {
-    "ts-serializable": "^4.0.0"
-  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -23,7 +20,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./types": "./dist/types.js",
-    "./objects": "./dist/objects.js"
+    "./classes": "./dist/classes.js"
   },
   "keywords": [
     "nekoweb",

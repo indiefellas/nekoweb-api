@@ -3,9 +3,6 @@
   "workspaces": {
     "": {
       "name": "@indiefellas/nekoweb-api",
-      "dependencies": {
-        "ts-serializable": "^4.0.0",
-      },
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -22,10 +19,6 @@
     "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg=="],
 
     "bun-types": ["bun-types@1.2.7", "", { "dependencies": { "@types/node": "*", "@types/ws": "*" } }, "sha512-P4hHhk7kjF99acXqKvltyuMQ2kf/rzIw3ylEDpCxDS9Xa0X0Yp/gJu/vDCucmWpiur5qJ0lwB2bWzOXa2GlHqA=="],
-
-    "reflect-metadata": ["reflect-metadata@0.2.2", "", {}, "sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q=="],
-
-    "ts-serializable": ["ts-serializable@4.0.0", "", { "peerDependencies": { "reflect-metadata": ">=0.1.0" } }, "sha512-W4kza2KWlvzYv8e6/HwtCzIcgTfrhUzYNBefIp6O735S4JG8974URDaI4ARH3ACEGWY12k55uQPjh2qM0W9omA=="],
 
     "typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
