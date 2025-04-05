@@ -18,6 +18,8 @@ export const folderSchema = z.object({
   dir: z.boolean(),
 });
 
+export const foldersSchema = z.array(folderSchema);
+
 export type Folder = z.infer<typeof folderSchema>;
 
 export const bigIdSchema = z.object({

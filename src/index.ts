@@ -1,5 +1,5 @@
 import type { ZodSchema } from 'zod';
-import { siteSchema, type Site } from './objects.js';
+import { folderSchema, foldersSchema, siteSchema, type Folder, type Site } from './objects.js';
 import { type Config } from './types.js';
 
 const BASE_URL = "https://nekoweb.org/api";
@@ -36,5 +36,9 @@ export default class NekowebAPI {
 		} else {
 			return this.generic<Site>(`/site/info/${username}`, siteSchema)
 		}
+	}
+
+	async getDir(path: string = "/"): Promise<Folder[]> {
+		return this.generic<Folder[]>(`/files/readfolder?pathname=${encodeURIComponent(path)}`, foldersSchema)
 	}
 }
