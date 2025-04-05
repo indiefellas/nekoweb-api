@@ -1,6 +1,6 @@
 import type { ZodSchema } from 'zod';
-import { siteSchema } from './objects';
-import { Site, type Config } from './types';
+import { siteSchema, type Site } from './objects';
+import { type Config } from './types';
 
 const BASE_URL = "https://nekoweb.org/api";
 
@@ -29,7 +29,7 @@ export default class NekowebAPI {
 		}
 	}
 
-	async getSiteInfo(username: String = "") {
+	async getSiteInfo(username: String = ""): Promise<Site> {
 		if (!username) {
 			if (!this.config.apiKey) throw new Error("Failed to retrieve site info, missing api key");
 			return this.generic<Site>("/site/info", siteSchema)

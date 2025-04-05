@@ -10,10 +10,12 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "files": [
+    "src/**/*"
+  ],
   "exports": {
-    ".": {
-      "import": "./src/index.ts"
-    },
-    "./package.json": "./package.json"
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./objects": "./src/objects.ts"
   }
 }
