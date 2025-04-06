@@ -1,7 +1,6 @@
 import type { HeadersInit } from 'bun';
 import { Folder, type ILimits, Limits, Site, type IFolder, type ISite } from './classes.js';
 import { type Config, type UploadFileInit } from './types.js';
-import FormData from 'form-data';
 
 const BASE_URL = "https://nekoweb.org/api";
 
@@ -90,7 +89,7 @@ export default class NekowebAPI {
 	 * @param file The Buffer of the file.
 	 */
 	async upload(path: string, file: Buffer) {
-		let data = new FormData();
+		let data = new FormData() as any;
 		data.append("pathname", path);
 		data.append("files", file);
 
@@ -135,15 +134,13 @@ export default class NekowebAPI {
 	 * @param content The content of the file.
 	 */
 	async edit(path: string, content: string) {
-		let data = new FormData();
+		let data = new FormData() as any; // get fucked
 		data.append("pathname", path);
 		data.append("content", content);
 
 		return this.generic('/files/edit', {
 			method: 'POST',
-			body: data
-		}, {
-			"Content-Type": 'multipart/form-data'
+			body: data,
 		})
 	}
 }
