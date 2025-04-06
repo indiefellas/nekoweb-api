@@ -1,7 +1,7 @@
 {
   "name": "@indiefellas/nekoweb-api",
   "description": "The definitive Nekoweb API wrapper",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "repository": {
     "url": "https://github.com/indiefellas/nekoweb-api"
   },

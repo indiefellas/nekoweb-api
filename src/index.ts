@@ -17,13 +17,13 @@ export default class NekowebAPI {
 			const headers: HeadersInit = { 
 				Authorization: this.config.apiKey ?? "",
 				"User-Agent": `${this.config.appName || "NekowebAPI"}/1.0`,
-				...this.config.headers || {},
 				...hdrs || {}
 			}
 
 			const response = await fetch(new URL(BASE_URL + route).href, {
 				headers: headers,
-				...init
+				...init,
+				...this.config.request || {}
 			});
 			if (!response.ok) {
 				throw new Error(`Generic failed with the code ${response.status} (${await response.text()})`);
@@ -74,10 +74,10 @@ export default class NekowebAPI {
 	 * @param path The path of the file/folder.
 	 * @param isFolder If it should be created as a folder.
 	 */
-	async create(path: string, isFolder: boolean) {
+	async create(path: string, isFolder: boolean = false) {
 		return this.generic('/files/create', {
 			method: 'POST',
-			body: `pathname=${encodeURIComponent(path)}&isFolder=${encodeURIComponent(isFolder)}`
+			body: `pathname=${encodeURIComponent(path)}${isFolder? `&isFolder=${encodeURIComponent(isFolder)}` : ''}`
 		}, {
 			"Content-Type": 'application/x-www-form-urlencoded'
 		})
