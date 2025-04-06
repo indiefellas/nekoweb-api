@@ -1,4 +1,4 @@
-import type { HeadersInit } from 'bun';
+import { file, type HeadersInit } from 'bun';
 import { Folder, type ILimits, Limits, Site, type IFolder, type ISite } from './classes.js';
 import { type Config, type UploadFileInit } from './types.js';
 
@@ -94,6 +94,12 @@ export default class NekowebAPI {
 		const filename = parts.pop() ?? 'file.bin';
 		const dirname = '/' + parts.join('/');
 
+		if (file.byteLength >= (100 * 1024 * 1024)) {
+			let bigFile = await this.createBigFile();
+			bigFile.append(file);
+			return bigFile.move(path);
+		}
+
 		data.append("pathname", dirname);
 		data.append("files", new File([file], filename));
 
@@ -165,15 +171,47 @@ class BigFile {
 		this.api = api; // kinda fucked up but lets me uses generic
 	}
 
+	private splitBuffer(buffer: Buffer) {
+		const chunkSize = 100 * 1024 * 1024;
+		const chunks = [];
+		const bufferLength = buffer.byteLength;
+
+		for (let i = 0; i < bufferLength; i += chunkSize) {
+			const end = Math.min(bufferLength, i + chunkSize);
+			const chunkLength = end - i;
+			const chunk = Buffer.allocUnsafe(chunkLength);
+			buffer.copy(chunk, 0, i, end);
+			chunks.push(chunk);
+		}
+
+		return chunks
+	}
+
 	/**
-	 * Append a chunk to a big file upload.
-	 * @param file Chunks must be less than 100MB
+	 * Append a file to a big file upload.
+	 * @param file The Buffer of the file to append.
 	 */
 	async append(file: Buffer) {
+		let chunks = this.splitBuffer(file);
+
+		console.log(chunks)
+
+		chunks.forEach(async (b) => {
+			console.log(await this.appendChunk(b));
+		})
+	}
+
+	/**
+	 * Append a chunk to a big file upload.
+	 * 
+	 * Note: Chunks must be less than 100MB.
+	 * @param chunk A Buffer of the chunked file.
+	 */
+	async appendChunk(chunk: Buffer) {
 		let data = new FormData() as any;
 
 		data.append("id", this.id);
-		data.append("file", new File([file], `chunk-${Date.now()}.bin`)); // :D
+		data.append("file", new File([chunk], `chunk-${Date.now()}.bin`)); // :D
 
 		return this.api.generic('/files/big/append', {
 			method: 'POST',
@@ -186,14 +224,9 @@ class BigFile {
 	 * @param filepath The path of the file to move to.
 	 */
 	async move(filepath: string) {
-		let data = new FormData() as any;
-
-		data.append("id", this.id);
-		data.append("pathname", filepath);
-
 		return this.api.generic('/files/big/move', {
 			method: 'POST',
-			body: data,
+			body: `id=${this.id}&pathname=${encodeURIComponent(filepath)}`,
 		})
 	}
 
