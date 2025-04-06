@@ -10,9 +10,9 @@ export default class NekowebAPI {
 		this.config = config;
 	}
 
-	private async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T>;
-	private async generic(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<string>;
-	private async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T | string> {
+	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T>;
+	async generic(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<string>;
+	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T | string> {
 		try {
 			const headers: HeadersInit = { 
 				Authorization: this.config.apiKey ?? "",
@@ -147,6 +147,62 @@ export default class NekowebAPI {
 	}
 
 	/**
-	 * 
+	 * Create upload for a big file. Allows you to upload files larger than 100MB.
+	 * @returns A BigFile object
 	 */
+	async createBigFile(): Promise<BigFile> {
+		let id = await this.generic<{"id": string}>('/files/big/create').then((res) => res.id)
+		return new BigFile(id, this);
+	}
+}
+
+class BigFile {
+	id: string
+	private api: NekowebAPI
+
+	constructor(id: string, api: NekowebAPI) {
+		this.id = id;
+		this.api = api; // kinda fucked up but lets me uses generic
+	}
+
+	/**
+	 * Append a chunk to a big file upload.
+	 * @param file Chunks must be less than 100MB
+	 */
+	async append(file: Buffer) {
+		let data = new FormData() as any;
+
+		data.append("id", this.id);
+		data.append("file", new File([file], `chunk-${Date.now()}.bin`)); // :D
+
+		return this.api.generic('/files/big/append', {
+			method: 'POST',
+			body: data,
+		})
+	}
+
+	/**
+	 * Move a big file upload to the final location.
+	 * @param filepath The path of the file to move to.
+	 */
+	async move(filepath: string) {
+		let data = new FormData() as any;
+
+		data.append("id", this.id);
+		data.append("pathname", filepath);
+
+		return this.api.generic('/files/big/move', {
+			method: 'POST',
+			body: data,
+		})
+	}
+
+	/**
+	 * Import a zip file from a big file upload.
+	 */
+	async import() {
+		return this.api.generic(`/files/import/${this.id}`, {
+			method: "POST"
+		})
+	}
 }
