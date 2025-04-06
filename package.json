@@ -30,9 +30,6 @@
     "prepare": "bun tsc"
   },
   "dependencies": {
-    "axios": "^1.8.4",
-    "form-data": "^4.0.2",
-    "formdata-node": "^6.0.3",
-    "node-fetch": "^3.3.2"
+    "form-data": "^4.0.2"
   }
 }
