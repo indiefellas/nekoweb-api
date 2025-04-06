@@ -90,14 +90,16 @@ export default class NekowebAPI {
 	 */
 	async upload(path: string, file: Buffer) {
 		let data = new FormData() as any;
-		data.append("pathname", path);
-		data.append("files", file);
+		const parts = path.split('/').filter(Boolean);
+		const filename = parts.pop() ?? 'file.bin';
+		const dirname = '/' + parts.join('/');
+
+		data.append("pathname", dirname);
+		data.append("files", new File([file], filename));
 
 		return this.generic('/files/upload', {
 			method: 'POST',
-			body: data
-		}, {
-			"Content-Type": 'multipart/form-data'
+			body: data,
 		})
 	}
 
@@ -143,4 +145,8 @@ export default class NekowebAPI {
 			body: data,
 		})
 	}
+
+	/**
+	 * 
+	 */
 }
