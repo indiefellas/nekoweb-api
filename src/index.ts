@@ -1,9 +1,16 @@
-import type { HeadersInit } from 'bun';
+// import type { HeadersInit } from 'bun';
 import { Folder, type ILimits, Limits, Site, type IFolder, type ISite } from './classes.js';
 import { type Config, type UploadFileInit } from './types.js';
 import FormData from 'form-data';
+import fetch from 'node-fetch';
+import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios';
 
 const BASE_URL = "https://nekoweb.org/api";
+
+export enum Method {
+	GET,
+	POST
+}
 
 export default class NekowebAPI {
 	private config: Config;
@@ -11,29 +18,32 @@ export default class NekowebAPI {
 		this.config = config;
 	}
 
-	private async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T>;
-	private async generic(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<string>;
-	private async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T | string> {
+	private async generic<T>(method: Method, route: String, init?: AxiosRequestConfig): Promise<T>;
+	private async generic(method: Method, route: String, init?: AxiosRequestConfig): Promise<string>;
+	private async generic<T>(method: Method, route: String, init?: AxiosRequestConfig): Promise<T | string> {
 		try {
-			const headers: HeadersInit = { 
-				Authorization: this.config.apiKey ?? "",
-				"User-Agent": `${this.config.appName || "NekowebAPI"}/1.0`,
-				...this.config.headers || {},
-				...hdrs || {}
+			const headers = { 
+				Authorization: this.config.apiKey,
+				...init?.headers ?? {}
 			}
 
-			const response = await fetch(new URL(BASE_URL + route).href, {
-				headers: headers,
-				...init
-			});
-			if (!response.ok) {
-				throw new Error(`Generic failed with the code ${response.status} (${await response.text()})`);
+			let response: AxiosResponse<any, any> | null = null;
+
+			switch (method) {
+				case Method.GET:
+					response = await axios.get<T>(BASE_URL + route, {
+						...init,
+						headers: headers
+					})
+					break;
+				case Method.POST:
+					response = await axios.post<T>(BASE_URL + route, {
+						...init,
+						headers: headers
+					})
 			}
-			if (response.headers.get('Content-Type')?.includes('application/json')) {
-				return response.json() as T;
-			} else {
-				return response.text();
-			}
+
+			return response?.data;
 		} catch (error) {
 			throw new Error(`Failed to do request to ${BASE_URL + route}: ${error}`);
 		}
@@ -47,9 +57,9 @@ export default class NekowebAPI {
 	async getSiteInfo(username: String = ""): Promise<Site> {
 		if (!username) {
 			if (!this.config.apiKey) throw new Error("Failed to retrieve site info, missing api key");
-			return await this.generic<ISite>("/site/info")
+			return await this.generic<ISite>(Method.GET, "/site/info")
 		} else {
-			return await this.generic<ISite>(`/site/info/${username}`)
+			return await this.generic<ISite>(Method.GET, `/site/info/${username}`)
 		}
 	}
 
@@ -58,7 +68,7 @@ export default class NekowebAPI {
 	 * @returns The current file limits before you get rate limited.
 	 */
 	async getFileLimits(): Promise<Limits> {
-		return await this.generic<ILimits>('/files/limits')
+		return await this.generic<ILimits>(Method.GET, '/files/limits')
 	}
 
 	/**
@@ -67,7 +77,7 @@ export default class NekowebAPI {
 	 * @returns An array of the contents of the folder.
 	 */
 	async listDir(path: string = "/"): Promise<Folder[]> {
-		return await this.generic<IFolder[]>(`/files/readfolder?pathname=${encodeURIComponent(path)}`)
+		return await this.generic<IFolder[]>(Method.GET, `/files/readfolder?pathname=${encodeURIComponent(path)}`)
 	}
 
 	/**
@@ -76,11 +86,12 @@ export default class NekowebAPI {
 	 * @param isFolder If it should be created as a folder.
 	 */
 	async create(path: string, isFolder: boolean) {
-		return this.generic('/files/create', {
+		return this.generic(Method.POST, '/files/create', {
 			method: 'POST',
-			body: `pathname=${encodeURIComponent(path)}&isFolder=${encodeURIComponent(isFolder)}`
-		}, {
-			"Content-Type": 'application/x-www-form-urlencoded'
+			data: `pathname=${encodeURIComponent(path)}&isFolder=${encodeURIComponent(isFolder)}`,
+			headers: {
+				"Content-Type": 'application/x-www-form-urlencoded'
+			}
 		})
 	}
 
@@ -90,15 +101,16 @@ export default class NekowebAPI {
 	 * @param file The Buffer of the file.
 	 */
 	async upload(path: string, file: Buffer) {
-		let data = new FormData();
-		data.append("pathname", path);
-		data.append("files", file);
+		let formData = new FormData();
+		formData.append("pathname", path);
+		formData.append("files", file);
 
-		return this.generic('/files/upload', {
+		return this.generic(Method.POST, '/files/upload', {
 			method: 'POST',
-			body: data
-		}, {
-			"Content-Type": 'multipart/form-data'
+			data: formData,
+			headers: {
+				"Content-Type": 'multipart/form-data'
+			}
 		})
 	}
 
@@ -107,11 +119,12 @@ export default class NekowebAPI {
 	 * @param path The path of the file/folder
 	 */
 	async delete(path: string) {
-		return this.generic('/files/delete', {
+		return this.generic(Method.POST, '/files/delete', {
 			method: 'POST',
-			body: `pathname=${path}`
-		}, {
-			"Content-Type": 'application/x-www-form-urlencoded'
+			data: `pathname=${path}`,
+			headers: {
+				"Content-Type": 'application/x-www-form-urlencoded'
+			}
 		})
 	}
 
@@ -121,11 +134,12 @@ export default class NekowebAPI {
 	 * @param newPath The new path of the file/folder.
 	 */
 	async rename(oldPath: string, newPath: string) {
-		return this.generic('/files/rename', {
+		return this.generic(Method.POST, '/files/rename', {
 			method: 'POST',
-			body: `pathname=${oldPath}&newpathname=${newPath}`
-		}, {
-			"Content-Type": 'application/x-www-form-urlencoded'
+			data: `pathname=${oldPath}&newpathname=${newPath}`,
+			headers: {
+				"Content-Type": 'application/x-www-form-urlencoded'
+			}
 		})
 	}
 
@@ -135,15 +149,18 @@ export default class NekowebAPI {
 	 * @param content The content of the file.
 	 */
 	async edit(path: string, content: string) {
-		let data = new FormData();
-		data.append("pathname", path);
-		data.append("content", content);
+		let formData = new FormData();
+		formData.append("pathname", path);
+		formData.append("content", content, "test.txt");
 
-		return this.generic('/files/edit', {
+		console.log(formData.getBuffer().toString())
+
+		return this.generic(Method.POST, '/files/edit', {
 			method: 'POST',
-			body: data
-		}, {
-			"Content-Type": 'multipart/form-data'
+			data: formData,
+			headers: {
+				// "Content-Type": 'multipart/form-data'
+			}
 		})
 	}
 }
