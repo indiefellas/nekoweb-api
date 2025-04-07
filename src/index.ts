@@ -11,8 +11,8 @@ export default class NekowebAPI {
 	}
 
 	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T>;
-	async generic(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<string>;
-	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T | string> {
+	async generic(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<ArrayBuffer>;
+	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T | ArrayBuffer> {
 		try {
 			const headers: HeadersInit = { 
 				Authorization: this.config.apiKey ?? "",
@@ -31,7 +31,7 @@ export default class NekowebAPI {
 			if (response.headers.get('Content-Type')?.includes('application/json')) {
 				return response.json() as T;
 			} else {
-				return response.text();
+				return response.arrayBuffer();
 			}
 		} catch (error) {
 			throw new Error(`Failed to do request to ${BASE_URL + route}: ${error}`);
@@ -116,7 +116,7 @@ export default class NekowebAPI {
 	async delete(path: string) {
 		return this.generic('/files/delete', {
 			method: 'POST',
-			body: `pathname=${path}`
+			body: `pathname=${encodeURIComponent(path)}`
 		}, {
 			"Content-Type": 'application/x-www-form-urlencoded'
 		})
