@@ -8,9 +8,6 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
   "license": "MIT",
   "peerDependencies": {
     "typescript": "^5"
@@ -31,6 +28,6 @@
     "prepare": "bun tsc"
   },
   "dependencies": {
-    "form-data": "^4.0.2"
+    "@types/bun": "latest"
   }
 }
