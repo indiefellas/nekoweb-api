@@ -21,10 +21,8 @@ let neko = new NekoAPI({
     apiKey: 'YOUR_API_KEY_HERE',
 });
 
-(async () => {
-    let response = await neko.getSiteInfo('jbcarreon123');
-    console.log(response)
-})()
+let response = await neko.getSiteInfo('jbcarreon123');
+console.log(response)
 ```
 
 Uploading a file:
@@ -36,11 +34,9 @@ let neko = new NekoAPI({
     apiKey: 'YOUR_API_KEY_HERE',
 });
 
-(async () => {
-    let file = fs.readFileSync('./README.md')
-    let response = await neko.upload('/README.md', file);
-    console.log(response)
-})()
+let file = fs.readFileSync('./README.md')
+let response = await neko.upload('/README.md', file);
+console.log(response)
 ```
 
 ## Nekoweb API
