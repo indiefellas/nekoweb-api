@@ -1,4 +1,3 @@
-import { type HeadersInit } from 'bun';
 import { Folder, type ILimits, Limits, Site, type IFolder, type ISite } from './classes.js';
 import { type Config, type UploadFileInit } from './types.js';
 
@@ -10,11 +9,11 @@ export default class NekowebAPI {
 		this.config = config;
 	}
 
-	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T>;
-	async generic(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<ArrayBuffer>;
-	async generic<T>(route: String, init?: RequestInit, hdrs?: HeadersInit): Promise<T | ArrayBuffer> {
+	async generic<T>(route: String, init?: RequestInit, hdrs?: any): Promise<T>;
+	async generic(route: String, init?: RequestInit, hdrs?: any): Promise<ArrayBuffer>;
+	async generic<T>(route: String, init?: RequestInit, hdrs?: any): Promise<T | ArrayBuffer> {
 		try {
-			const headers: HeadersInit = { 
+			const headers: any = { 
 				Authorization: this.config.apiKey ?? "",
 				"User-Agent": `${this.config.appName || "NekowebAPI"}/1.0`,
 				...hdrs || {}
