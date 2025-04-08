@@ -1,4 +1,4 @@
-import { file, type HeadersInit } from 'bun';
+import { type HeadersInit } from 'bun';
 import { Folder, type ILimits, Limits, Site, type IFolder, type ISite } from './classes.js';
 import { type Config, type UploadFileInit } from './types.js';
 
