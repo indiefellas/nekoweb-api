@@ -161,7 +161,7 @@ export default class NekowebAPI {
 	}
 }
 
-class BigFile {
+export class BigFile {
 	id: string
 	private api: NekowebAPI
 
@@ -210,11 +210,15 @@ class BigFile {
 		let data = new FormData() as any;
 
 		data.append("id", this.id);
-		data.append("file", new File([chunk], `chunk-${Date.now()}.bin`)); // :D
+		data.append("file", new File([chunk], `chunk-${Date.now()}.bin`), { filename: `chunk-${Date.now()}.bin` }); // :D
+
+		console.log(data as FormData)
 
 		return this.api.generic('/files/big/append', {
 			method: 'POST',
 			body: data,
+		}, {
+			...data.getHeaders()
 		})
 	}
 
