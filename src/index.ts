@@ -24,8 +24,8 @@ export default class NekowebAPI {
 			const response = await axios<T | ArrayBuffer>({
 				url: new URL(BASE_URL + route).href,
 				headers: headers,
-				...init,
-				...this.config.request ?? {}
+				...this.config.request ?? {},
+				...init
 			})
 
 			return response.data as T;
