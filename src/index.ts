@@ -1,39 +1,36 @@
 import { Folder, type ILimits, Limits, Site, type IFolder, type ISite } from './classes.js';
-import { type Config, type UploadFileInit } from './types.js';
+import { LogType, type Config, type UploadFileInit } from './types.js';
+import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from 'axios';
+import FormData from 'form-data';
 
 const BASE_URL = "https://nekoweb.org/api";
 
 export default class NekowebAPI {
-	private config: Config;
+	config: Config;
 	constructor(config: Config) {
 		this.config = config;
 	}
 
-	async generic<T>(route: String, init?: RequestInit, hdrs?: any): Promise<T>;
-	async generic(route: String, init?: RequestInit, hdrs?: any): Promise<ArrayBuffer>;
-	async generic<T>(route: String, init?: RequestInit, hdrs?: any): Promise<T | ArrayBuffer> {
+	async generic<T>(route: String, init?: AxiosRequestConfig, hdrs?: any): Promise<T>;
+	async generic(route: String, init?: AxiosRequestConfig, hdrs?: any): Promise<ArrayBuffer>;
+	async generic<T>(route: String, init?: AxiosRequestConfig, hdrs?: any): Promise<T | ArrayBuffer> {
 		try {
-			const headers: any = { 
+			const headers: AxiosHeaders = { 
 				Authorization: this.config.apiKey ?? "",
 				"User-Agent": `${this.config.appName || "NekowebAPI"}/1.0`,
 				...hdrs || {}
 			}
 
-			const response = await fetch(new URL(BASE_URL + route).href, {
+			const response = await axios<T | ArrayBuffer>({
+				url: new URL(BASE_URL + route).href,
 				headers: headers,
-				...init,
-				...this.config.request || {}
-			});
-			if (!response.ok) {
-				throw new Error(`Generic failed with the code ${response.status} (${await response.text()})`);
-			}
-			if (response.headers.get('Content-Type')?.includes('application/json')) {
-				return response.json() as T;
-			} else {
-				return response.arrayBuffer();
-			}
+				...this.config.request ?? {},
+				...init
+			})
+
+			return response.data as T;
 		} catch (error) {
-			throw new Error(`Failed to do request to ${BASE_URL + route}: ${error}`);
+			throw new Error(`Failed to do request to ${BASE_URL + route}: Server returned ${(error as AxiosError).code} ${(error as AxiosError).response?.data}`);
 		}
 	}
 
@@ -76,7 +73,7 @@ export default class NekowebAPI {
 	async create(path: string, isFolder: boolean = false) {
 		return this.generic('/files/create', {
 			method: 'POST',
-			body: `pathname=${encodeURIComponent(path)}${isFolder? `&isFolder=${encodeURIComponent(isFolder)}` : ''}`
+			data: `pathname=${encodeURIComponent(path)}${isFolder? `&isFolder=${encodeURIComponent(isFolder)}` : ''}`
 		}, {
 			"Content-Type": 'application/x-www-form-urlencoded'
 		})
@@ -88,7 +85,7 @@ export default class NekowebAPI {
 	 * @param file The Buffer of the file.
 	 */
 	async upload(path: string, file: Buffer) {
-		let data = new FormData() as any;
+		let data = new FormData();
 		const parts = path.split('/').filter(Boolean);
 		const filename = parts.pop() ?? 'file.bin';
 		const dirname = '/' + parts.join('/');
@@ -104,7 +101,9 @@ export default class NekowebAPI {
 
 		return this.generic('/files/upload', {
 			method: 'POST',
-			body: data,
+			data: data,
+		}, {
+			...data.getHeaders()
 		})
 	}
 
@@ -115,7 +114,7 @@ export default class NekowebAPI {
 	async delete(path: string) {
 		return this.generic('/files/delete', {
 			method: 'POST',
-			body: `pathname=${encodeURIComponent(path)}`
+			data: `pathname=${encodeURIComponent(path)}`
 		}, {
 			"Content-Type": 'application/x-www-form-urlencoded'
 		})
@@ -129,7 +128,7 @@ export default class NekowebAPI {
 	async rename(oldPath: string, newPath: string) {
 		return this.generic('/files/rename', {
 			method: 'POST',
-			body: `pathname=${oldPath}&newpathname=${newPath}`
+			data: `pathname=${oldPath}&newpathname=${newPath}`
 		}, {
 			"Content-Type": 'application/x-www-form-urlencoded'
 		})
@@ -141,13 +140,15 @@ export default class NekowebAPI {
 	 * @param content The content of the file.
 	 */
 	async edit(path: string, content: string) {
-		let data = new FormData() as any; // get fucked
+		let data = new FormData(); // get fucked
 		data.append("pathname", path);
 		data.append("content", content);
 
 		return this.generic('/files/edit', {
 			method: 'POST',
-			body: data,
+			data: data,
+		}, {
+			...data.getHeaders()
 		})
 	}
 
@@ -157,16 +158,18 @@ export default class NekowebAPI {
 	 */
 	async createBigFile(): Promise<BigFile> {
 		let id = await this.generic<{"id": string}>('/files/big/create').then((res) => res.id)
-		return new BigFile(id, this);
+		return new BigFile(id, this, this.config);
 	}
 }
 
 export class BigFile {
 	id: string
-	private api: NekowebAPI
+	private api: NekowebAPI;
+	private config: Config;
 
-	constructor(id: string, api: NekowebAPI) {
+	constructor(id: string, api: NekowebAPI, config: Config) {
 		this.id = id;
+		this.config = config;
 		this.api = api; // kinda fucked up but lets me uses generic
 	}
 
@@ -186,18 +189,52 @@ export class BigFile {
 		return chunks
 	}
 
+	private async sleepUntil(time: number) {
+		const now = Date.now();
+		if (now >= time) return;
+		return new Promise((resolve) => setTimeout(resolve, time - now));
+	};
+
+	private calculateChunks(fileSize: number) {
+		const maxChunkSize = 100 * 1024 * 1024;
+		const minChunkSize = 10 * 1024 * 1024;
+		const minChunks = 5;
+	  
+		let numberOfChunks = Math.ceil(fileSize / maxChunkSize);
+		let chunkSize = Math.ceil(fileSize / numberOfChunks);
+	  
+		if (chunkSize < minChunkSize) {
+		  chunkSize = minChunkSize;
+		  numberOfChunks = Math.ceil(fileSize / chunkSize);
+		}
+	  
+		if (numberOfChunks < minChunks) {
+		  numberOfChunks = minChunks;
+		  chunkSize = Math.ceil(fileSize / numberOfChunks);
+		}
+	  
+		return { chunkSize, numberOfChunks };
+	  };
+
 	/**
 	 * Append a file to a big file upload.
 	 * @param file The Buffer of the file to append.
 	 */
 	async append(file: Buffer) {
-		let chunks = this.splitBuffer(file);
+		let uploadedBytes = 0;
+		const { chunkSize, numberOfChunks } = this.calculateChunks(file.length);
 
-		console.log(chunks)
+		for (let chunkIndex = 0; chunkIndex < numberOfChunks; chunkIndex++) {
+			const start = chunkIndex * chunkSize;
+			const end = Math.min(start + chunkSize, file.length);
+			const chunk = file.slice(start, end);
 
-		chunks.forEach(async (b) => {
-			console.log(await this.appendChunk(b));
-		})
+			this.config.logging!(LogType.Info, `Uploading chunk ${chunkIndex} (${chunk.length})`);
+			await this.appendChunk(chunk);
+
+			uploadedBytes += chunk.length;
+		}
+		return uploadedBytes;
 	}
 
 	/**
@@ -207,16 +244,14 @@ export class BigFile {
 	 * @param chunk A Buffer of the chunked file.
 	 */
 	async appendChunk(chunk: Buffer) {
-		let data = new FormData() as any;
+		let data = new FormData();
 
 		data.append("id", this.id);
-		data.append("file", new File([chunk], `chunk-${Date.now()}.bin`), { filename: `chunk-${Date.now()}.bin` }); // :D
-
-		console.log(data as FormData)
+		data.append("file", chunk, { filename: `chunk-${Date.now()}.part` }); // :D
 
 		return this.api.generic('/files/big/append', {
 			method: 'POST',
-			body: data,
+			data: data,
 		}, {
 			...data.getHeaders()
 		})
@@ -229,7 +264,7 @@ export class BigFile {
 	async move(filepath: string) {
 		return this.api.generic('/files/big/move', {
 			method: 'POST',
-			body: `id=${this.id}&pathname=${encodeURIComponent(filepath)}`,
+			data: `id=${this.id}&pathname=${encodeURIComponent(filepath)}`,
 		})
 	}
 
@@ -237,6 +272,11 @@ export class BigFile {
 	 * Import a zip file from a big file upload.
 	 */
 	async import() {
+		let limits = await this.api.getFileLimits();
+		if (limits.big_uploads.reset < 1)
+			await this.sleepUntil(limits.big_uploads.reset);
+		if (limits.zip.reset < 1)
+			await this.sleepUntil(limits.zip.reset);
 		return this.api.generic(`/files/import/${this.id}`, {
 			method: "POST"
 		})
