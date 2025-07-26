@@ -269,12 +269,6 @@ export class BigFile {
 	 */
 	async import() {
 		let limits = await this.api.getFileLimits();
-        if (limits.zip.reset < 1)
-            await this.sleepUntil(limits.general.reset);
-		if (limits.big_uploads.reset < 1)
-			await this.sleepUntil(limits.big_uploads.reset);
-		if (limits.zip.reset < 1)
-			await this.sleepUntil(limits.zip.reset);
 		return this.api.generic(`/files/import/${this.id}`, {
 			method: "POST"
 		})
