@@ -54,13 +54,19 @@ let neko = new NekoAPI({
 });
 ```
 
-### `getSiteInfo(username?: string)`
-- Accepts a `username`, but without it, it will request the site info of the owner of the API key specified
+### `getSiteInfo(domain?: string)`
+- Accepts a `domain`, but without it, it will request the site info of the main site of the API key specified
 - Returns a `SiteInfo` class
 ```js
 await neko.getSiteInfo(); // returns info of the API key owner
 
 await neko.getSiteInfo('jbcarreon123'); // returns info for user jbcarreon123
+```
+
+### `getAllSiteInfo()`
+- Returns a array of `SiteInfo`
+```js
+await neko.getAllSiteInfo(); // returns info of all sites on the specified API key
 ```
 
 ### `getFileLimits()`

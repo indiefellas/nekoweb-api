@@ -36,16 +36,28 @@ export default class NekowebAPI {
 
 	/**
 	 * Gets a Nekoweb site's information.
-	 * @param username The username of the site (usually [username].nekoweb.org)
+	 * @param domain The domain of the site (usually [domain].nekoweb.org), defaults to your main site
 	 * @returns A Site object that contains the site's information
 	 */
-	async getSiteInfo(username: String = ""): Promise<Site> {
-		if (!username) {
+	async getSiteInfo(domain: String = ""): Promise<Site> {
+		const siteInfos = await this.getAllSiteInfo();
+		if (!domain) {
 			if (!this.config.apiKey) throw new Error("Failed to retrieve site info, missing api key");
-			return await this.generic<ISite>("/site/info")
+			return siteInfos[0] || await this.generic<ISite>(`/site/info/`);
 		} else {
-			return await this.generic<ISite>(`/site/info/${username}`)
+			return siteInfos.find(s => s.domain === domain) || await this.generic<ISite>(`/site/info/${domain}`);
 		}
+	}
+
+	/**
+	 * Gets the info of all of your sites.
+	 * @returns A array of Site objects that contains each site's information
+	 */
+	async getAllSiteInfo(): Promise<Array<Site>> {
+		return (await this.generic<Array<ISite>>("/site/info_all")).map(s => ({
+			...s,
+			main: (s.main as unknown as number) === 1
+		}))
 	}
 
 	/**
@@ -173,22 +185,6 @@ export class BigFile {
 		this.api = api; // kinda fucked up but lets me uses generic
 	}
 
-	private splitBuffer(buffer: Buffer) {
-		const chunkSize = 100 * 1024 * 1024;
-		const chunks = [];
-		const bufferLength = buffer.byteLength;
-
-		for (let i = 0; i < bufferLength; i += chunkSize) {
-			const end = Math.min(bufferLength, i + chunkSize);
-			const chunkLength = end - i;
-			const chunk = Buffer.allocUnsafe(chunkLength);
-			buffer.copy(chunk, 0, i, end);
-			chunks.push(chunk);
-		}
-
-		return chunks
-	}
-
 	private async sleepUntil(time: number) {
 		const now = Date.now();
 		if (now >= time) return;
@@ -273,6 +269,8 @@ export class BigFile {
 	 */
 	async import() {
 		let limits = await this.api.getFileLimits();
+        if (limits.zip.reset < 1)
+            await this.sleepUntil(limits.general.reset);
 		if (limits.big_uploads.reset < 1)
 			await this.sleepUntil(limits.big_uploads.reset);
 		if (limits.zip.reset < 1)

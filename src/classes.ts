@@ -1,6 +1,8 @@
 export interface ISite {
+  main?: boolean;
   id: number;
-  username: string;
+  folder?: string;
+  domain: string;
   title: string;
   updates: number;
   followers: number;
@@ -10,8 +12,10 @@ export interface ISite {
 }
 
 export class Site implements ISite {
+  main?: boolean;
   id!: number;
-  username!: string;
+  folder?: string;
+  domain!: string;
   title!: string;
   updates!: number;
   followers!: number;
