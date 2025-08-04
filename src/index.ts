@@ -174,6 +174,9 @@ export default class NekowebAPI {
 	}
 }
 
+/**
+ * The functions for the BigFile API
+ */
 export class BigFile {
 	id: string
 	private api: NekowebAPI;
@@ -184,12 +187,6 @@ export class BigFile {
 		this.config = config;
 		this.api = api; // kinda fucked up but lets me uses generic
 	}
-
-	private async sleepUntil(time: number) {
-		const now = Date.now();
-		if (now >= time) return;
-		return new Promise((resolve) => setTimeout(resolve, time - now));
-	};
 
 	private calculateChunks(fileSize: number) {
 		const maxChunkSize = 100 * 1024 * 1024;
@@ -266,11 +263,13 @@ export class BigFile {
 
 	/**
 	 * Import a zip file from a big file upload.
+	 * @param path The destination path of the imported ZIP file (default: /)
 	 */
-	async import() {
+	async import(path: string = '/') {
 		let limits = await this.api.getFileLimits();
 		return this.api.generic(`/files/import/${this.id}`, {
-			method: "POST"
+			method: "POST",
+			data: `path=${encodeURIComponent(path)}`
 		})
 	}
 }
